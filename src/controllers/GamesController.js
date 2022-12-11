@@ -14,3 +14,16 @@ export async function createGames(req, res) {
     res.sendStatus(500);
   }
 }
+
+export async function getGames(req, res) {
+  const { name } = req.query;
+  try {
+    const games = await connectionDB.query(
+      'SELECT games.*,categories.name as "category_name"  FROM games JOIN categories ON games."category_id"=categories.id '
+    );
+    res.send(games.rows);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+}
