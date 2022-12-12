@@ -4,10 +4,6 @@ import connectionDB from "../server.js";
 export async function rentalsValidate(req, res, next) {
   const rental = req.body;
 
-  // if (rental === {}) {
-  //   return res.sendStatus(500);
-  // }
-
   const { error } = rentalsShema.validate(rental, { abortEarly: false });
 
   if (error) {
@@ -34,6 +30,48 @@ export async function rentalsValidate(req, res, next) {
     res.locals.rentals = rental;
     res.locals.games = gameExists.rows[0];
     res.locals.customers = customerExists.rows[0];
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+  next();
+}
+
+export async function deleteRentalsValidate(req, res, next) {
+  const { id } = req.params;
+  try {
+    const rentalsExists = await connectionDB.query(
+      "SELECT * FROM rentals WHERE id=$1;",
+      [id]
+    );
+    if (!rentalsExists.rows[0]) {
+      return res.sendStatus(404);
+    }
+    if (rentalsExists.rows[0].return_date === null) {
+      return res.sendStatus(400);
+    }
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+
+  next();
+}
+
+export async function returnRentalsValidate(req, res, next) {
+  const { id } = req.params;
+  try {
+    const idExists = await connectionDB.query(
+      "SELECT * FROM rentals WHERE id=$1;",
+      [id]
+    );
+    if (!idExists.rows[0]) {
+      return res.sendStatus(404);
+    }
+    if (idExists.rows[0].return_date !== null) {
+      return res.sendStatus(400);
+    }
+    res.locals.rentals = idExists.rows[0];
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
